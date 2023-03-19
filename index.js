@@ -1,26 +1,15 @@
 /** 
- * command format:
- *   node index.js [mode] [text]
- * 
  * modes:
  *   "normal",
  *   "bold",
  *   "italic",
  *   "italic bold"
- *
- * error codes:
- *   1: missing text input
- *   2: missing mode or both inputs
- *   3: unknown/invalid mode
  */
 const uppercaseAlphabet = require('./uppercase.json')
 const lowercaseAlphabet = require('./lowercase.json')
-const { exit } = require('node:process');
 
 const charecters = require('./charecters.json')
 const truthTables = {}
-const mode = process.argv[2]
-const inputText = process.argv[3]
 
 for (const start in charecters.alphabets) {
     const config = charecters.alphabets[start]
@@ -61,20 +50,19 @@ for (const tableName in truthTables) {
     }
 }
 
-if (!mode || !inputText) {
-    process.stdout.write((!mode ? 'missing mode type' : 'missing input text') + '\n')
-    exit(1 + !mode);
+module.exports = (mode, inputText) => {
+    if (!mode || !inputText) {
+        throw new Error(!mode ? 'missing mode type' : 'missing input text')
+    }
+    
+    if (!truthTables[mode]) {
+        throw new Error(`unknown mode type "${mode}", known modes are ${Object.keys(truthTables).map(name => (`"${name}"`))}`)
+    }
+    
+    let output = ''
+    const truthTable = truthTables[mode]
+    for (const letter of inputText.split('')) {
+        output += truthTable[letter] || letter 
+    }
+    return output
 }
-
-if (!truthTables[mode]) {
-    process.stdout.write(`unknown mode type "${mode}", known modes are ${Object.keys(truthTables).map(name => (`"${name}"`))}\n`)
-    exit(3);
-}
-
-let output = ''
-const truthTable = truthTables[mode]
-for (const letter of inputText.split('')) {
-    output += truthTable[letter] || letter 
-}
-
-process.stdout.write(output)
